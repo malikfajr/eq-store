@@ -26,8 +26,8 @@ func main() {
 
 	r := http.NewServeMux()
 
-	staffRoutes := routes.NewStaffRoute(pool, validate)
-	r.Handle("/v1/staff/", http.StripPrefix("/v1/staff", staffRoutes))
+	RoutesV1 := routes.NewRoutesV1(pool, validate)
+	r.Handle("/v1/", http.StripPrefix("/v1", RoutesV1))
 
 	s := http.Server{
 		Addr:    ":8080",

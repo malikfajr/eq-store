@@ -14,17 +14,21 @@ func Auth(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		Authorization := r.Header.Get("Authorization")
 
+		Unauthorize := exception.NewUnauthorized("Invalid token")
+		if len(Authorization) < 8 {
+			Unauthorize.Send(w)
+			return
+		}
+
 		if Authorization[:7] != "Bearer " {
-			e := exception.NewUnauthorized("Invalid token")
-			e.Send(w)
+			Unauthorize.Send(w)
 			return
 		}
 
 		token := Authorization[7:]
 		jwt, err := pkg.ClaimToken(token)
 		if err != nil {
-			e := exception.NewUnauthorized("Invalid token")
-			e.Send(w)
+			Unauthorize.Send(w)
 			return
 		}
 
