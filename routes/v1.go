@@ -41,5 +41,11 @@ func NewRoutesV1(pool *pgxpool.Pool, validate *validator.Validate) *http.ServeMu
 	r.Handle("POST /customer/register", Auth(http.HandlerFunc(customerController.Create)))
 	r.Handle("GET /customer", Auth(http.HandlerFunc(customerController.GetAll)))
 
+	transactionRepository := repository.NewTransactionRepository()
+	transactionService := service.NewTransactionService(pool, customerRepoitory, productRepository, transactionRepository)
+	transactionController := controller.NewTransactionController(validate, transactionService)
+
+	r.Handle("POST /product/checkout", Auth(http.HandlerFunc(transactionController.Create)))
+	r.Handle("GET /product/checkout/history", Auth(http.HandlerFunc(transactionController.GetAll)))
 	return r
 }

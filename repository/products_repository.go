@@ -16,6 +16,7 @@ type ProductRepository interface {
 	FindMany(ctx context.Context, pool *pgxpool.Pool, params *entity.ProductQueryParams) (*[]entity.Product, error)
 	FindSku(ctx context.Context, pool *pgxpool.Pool, params *entity.ProductQueryParams) (*[]entity.ProductSKU, error)
 	FindOne(ctx context.Context, pool *pgxpool.Pool, ID string) (*entity.Product, error)
+	FindByIds(ctx context.Context, pool *pgxpool.Pool, productIds []string) *[]entity.Product
 	UpdateTx(ctx context.Context, tx pgx.Tx, product *entity.Product) error
 	DeleteTx(ctx context.Context, tx pgx.Tx, ID string) error
 }
@@ -94,10 +95,6 @@ func (p *productRepository) FindMany(ctx context.Context, pool *pgxpool.Pool, pa
 		query += " ORDER BY created_at " + params.CreatedAt
 	}
 
-	if params.Limit <= 0 {
-		params.Limit = 5
-	}
-
 	args["limit"] = params.Limit
 	args["offset"] = params.Offset
 
@@ -166,10 +163,6 @@ func (p *productRepository) FindSku(ctx context.Context, pool *pgxpool.Pool, par
 		query += " ORDER BY price " + params.Price
 	}
 
-	if params.Limit <= 0 {
-		params.Limit = 5
-	}
-
 	args["limit"] = params.Limit
 	args["offset"] = params.Offset
 
@@ -221,4 +214,19 @@ func (p *productRepository) DeleteTx(ctx context.Context, tx pgx.Tx, ID string) 
 	}
 
 	return err
+}
+
+func (p *productRepository) FindByIds(ctx context.Context, pool *pgxpool.Pool, productIds []string) *[]entity.Product {
+	query := "SELECT * FROM products WHERE id::TEXT = ANY($1);"
+
+	rows, err := pool.Query(ctx, query, productIds)
+	if err != nil {
+		panic(err)
+	}
+
+	products, err := pgx.CollectRows(rows, pgx.RowToStructByPos[entity.Product])
+	if err != nil {
+		panic(err)
+	}
+	return &products
 }

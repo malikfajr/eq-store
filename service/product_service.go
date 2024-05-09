@@ -10,10 +10,10 @@ import (
 )
 
 type ProductService interface {
-	Create(ctx context.Context, req *entity.ProductInsertUpdateRequest) (*entity.Product, error)
+	Create(ctx context.Context, req *entity.ProductInsertRequest) (*entity.Product, error)
 	GetAll(ctx context.Context, req *entity.ProductQueryParams) (*[]entity.Product, error)
 	FindSku(ctx context.Context, req *entity.ProductQueryParams) (*[]entity.ProductSKU, error)
-	Update(ctx context.Context, ID string, req *entity.ProductInsertUpdateRequest) (*entity.Product, error)
+	Update(ctx context.Context, ID string, req *entity.ProductUpdateRequest) (*entity.Product, error)
 	Delete(ctx context.Context, ID string) error
 }
 
@@ -29,7 +29,7 @@ func NewProductService(pool *pgxpool.Pool, productRepo repository.ProductReposit
 	}
 }
 
-func (p *productService) Create(ctx context.Context, req *entity.ProductInsertUpdateRequest) (*entity.Product, error) {
+func (p *productService) Create(ctx context.Context, req *entity.ProductInsertRequest) (*entity.Product, error) {
 	product := &entity.Product{
 		Name:        req.Name,
 		SKU:         req.SKU,
@@ -63,7 +63,7 @@ func (p *productService) FindSku(ctx context.Context, req *entity.ProductQueryPa
 	return productSKU, err
 }
 
-func (p *productService) Update(ctx context.Context, ID string, req *entity.ProductInsertUpdateRequest) (*entity.Product, error) {
+func (p *productService) Update(ctx context.Context, ID string, req *entity.ProductUpdateRequest) (*entity.Product, error) {
 	product, err := p.productRepository.FindOne(ctx, p.pool, ID)
 	if err != nil {
 		e := exception.NewNotFound("ID not found")

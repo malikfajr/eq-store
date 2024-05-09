@@ -34,7 +34,7 @@ func NewProductController(service service.ProductService, validate *validator.Va
 }
 
 func (p *productController) Create(w http.ResponseWriter, r *http.Request) {
-	body := entity.ProductInsertUpdateRequest{}
+	body := entity.ProductInsertRequest{}
 
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
 		e := exception.NewBadRequest("request doesn’t pass validation")
@@ -165,7 +165,7 @@ func (p *productController) GetAll(w http.ResponseWriter, r *http.Request) {
 
 func (p *productController) Update(w http.ResponseWriter, r *http.Request) {
 	ID := r.PathValue("id")
-	body := entity.ProductInsertUpdateRequest{}
+	body := entity.ProductUpdateRequest{}
 
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
 		e := exception.NewBadRequest("request doesn’t pass validation")

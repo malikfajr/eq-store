@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"log"
 	"strings"
 
 	"github.com/jackc/pgx/v5"
@@ -12,6 +13,7 @@ import (
 type CustomerRepository interface {
 	FindMany(ctx context.Context, pool *pgxpool.Pool, params *entity.CustomerQueryParams) *[]entity.Customer
 	Create(ctx context.Context, pool *pgxpool.Pool, customer *entity.Customer) (string, error)
+	IsExist(ctx context.Context, pool *pgxpool.Pool, customerId string) bool
 }
 
 type customerRepository struct{}
@@ -53,4 +55,18 @@ func (c *customerRepository) FindMany(ctx context.Context, pool *pgxpool.Pool, p
 	}
 
 	return &customers
+}
+
+func (c *customerRepository) IsExist(ctx context.Context, pool *pgxpool.Pool, customerId string) bool {
+	var n int
+	query := "SELECT 1 FROM customers WHERE id = $1"
+
+	err := pool.QueryRow(ctx, query, customerId).Scan(&n)
+	if err != nil {
+		return false
+	}
+
+	log.Println(n, "exists")
+
+	return true
 }
