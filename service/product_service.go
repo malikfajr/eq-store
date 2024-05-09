@@ -2,7 +2,6 @@ package service
 
 import (
 	"context"
-	"log"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/malikfajr/eq-store/entity"
@@ -11,23 +10,26 @@ import (
 )
 
 type ProductService interface {
-	Create(ctx context.Context, req entity.ProductInsertUpdateRequest) (*entity.Product, error)
-	GetAll(ctx context.Context, req entity.ProductQueryParams) (*[]entity.Product, error)
+	Create(ctx context.Context, req *entity.ProductInsertUpdateRequest) (*entity.Product, error)
+	GetAll(ctx context.Context, req *entity.ProductQueryParams) (*[]entity.Product, error)
+	FindSku(ctx context.Context, req *entity.ProductQueryParams) (*[]entity.ProductSKU, error)
+	Update(ctx context.Context, ID string, req *entity.ProductInsertUpdateRequest) (*entity.Product, error)
+	Delete(ctx context.Context, ID string) error
 }
 
 type productService struct {
-	pool               *pgxpool.Pool
-	productRepositoory repository.ProductRepository
+	pool              *pgxpool.Pool
+	productRepository repository.ProductRepository
 }
 
 func NewProductService(pool *pgxpool.Pool, productRepo repository.ProductRepository) ProductService {
 	return &productService{
-		pool:               pool,
-		productRepositoory: productRepo,
+		pool:              pool,
+		productRepository: productRepo,
 	}
 }
 
-func (p *productService) Create(ctx context.Context, req entity.ProductInsertUpdateRequest) (*entity.Product, error) {
+func (p *productService) Create(ctx context.Context, req *entity.ProductInsertUpdateRequest) (*entity.Product, error) {
 	product := &entity.Product{
 		Name:        req.Name,
 		SKU:         req.SKU,
@@ -40,9 +42,8 @@ func (p *productService) Create(ctx context.Context, req entity.ProductInsertUpd
 		IsAvailable: *req.IsAvailable,
 	}
 
-	data, err := p.productRepositoory.Insert(ctx, p.pool, product)
+	data, err := p.productRepository.Insert(ctx, p.pool, product)
 	if err != nil {
-		log.Println(err)
 		e := exception.NewInternalServer("Internal server error")
 		return nil, e
 	}
@@ -50,8 +51,82 @@ func (p *productService) Create(ctx context.Context, req entity.ProductInsertUpd
 	return data, nil
 }
 
-func (p *productService) GetAll(ctx context.Context, req entity.ProductQueryParams) (*[]entity.Product, error) {
-	products, err := p.productRepositoory.FindMany(ctx, p.pool, &req)
+func (p *productService) GetAll(ctx context.Context, req *entity.ProductQueryParams) (*[]entity.Product, error) {
+	products, err := p.productRepository.FindMany(ctx, p.pool, req)
 
 	return products, err
+}
+
+func (p *productService) FindSku(ctx context.Context, req *entity.ProductQueryParams) (*[]entity.ProductSKU, error) {
+	productSKU, err := p.productRepository.FindSku(ctx, p.pool, req)
+
+	return productSKU, err
+}
+
+func (p *productService) Update(ctx context.Context, ID string, req *entity.ProductInsertUpdateRequest) (*entity.Product, error) {
+	product, err := p.productRepository.FindOne(ctx, p.pool, ID)
+	if err != nil {
+		e := exception.NewNotFound("ID not found")
+		return nil, e
+	}
+
+	product.Name = req.Name
+	product.SKU = req.SKU
+	product.Category = req.Category
+	product.Notes = req.Notes
+	product.ImageUrl = req.ImageUrl
+	product.Price = req.Price
+	product.Stock = *req.Stock
+	product.Location = req.Location
+	product.IsAvailable = *req.IsAvailable
+
+	tx, err := p.pool.Begin(ctx)
+	if err != nil {
+		panic(err)
+	}
+	defer func() {
+		err := recover()
+		if err != nil {
+			e := tx.Rollback(ctx)
+			if e != nil {
+				panic(e)
+			}
+		} else {
+			e := tx.Commit(ctx)
+			if e != nil {
+				panic(e)
+			}
+		}
+	}()
+
+	err = p.productRepository.UpdateTx(ctx, tx, product)
+
+	if err != nil {
+		return nil, exception.NewInternalServer("Internal server error")
+	}
+
+	return product, nil
+}
+
+func (p *productService) Delete(ctx context.Context, ID string) error {
+	tx, err := p.pool.Begin(ctx)
+	if err != nil {
+		panic(err)
+	}
+
+	err = p.productRepository.DeleteTx(ctx, tx, ID)
+
+	if err != nil {
+		e := tx.Rollback(ctx)
+		if e != nil {
+			panic(e)
+		}
+	} else {
+		e := tx.Commit(ctx)
+		if e != nil {
+			panic(e)
+		}
+	}
+
+	return err
 }

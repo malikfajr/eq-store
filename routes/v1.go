@@ -24,11 +24,22 @@ func NewRoutesV1(pool *pgxpool.Pool, validate *validator.Validate) *http.ServeMu
 	r.HandleFunc("POST /staff/login", staffController.Login)
 
 	productRepository := repository.NewProductRepository()
-	productSerice := service.NewProductService(pool, productRepository)
-	productController := controller.NewProductController(productSerice, validate)
+	productService := service.NewProductService(pool, productRepository)
+	productController := controller.NewProductController(productService, validate)
 
 	r.Handle("POST /product", Auth(http.HandlerFunc(productController.Create)))
 	r.Handle("GET /product", Auth(http.HandlerFunc(productController.GetAll)))
+	r.Handle("PUT /product/{id}", Auth(http.HandlerFunc(productController.Update)))
+	r.Handle("DELETE /product/{id}", Auth(http.HandlerFunc(productController.Delete)))
+
+	r.Handle("GET /product/customer", http.HandlerFunc(productController.FindSku))
+
+	customerRepoitory := repository.NewCustomerRepository()
+	customerService := service.NewCustomerService(pool, customerRepoitory)
+	customerController := controller.NewCustomerController(validate, customerService)
+
+	r.Handle("POST /customer/register", Auth(http.HandlerFunc(customerController.Create)))
+	r.Handle("GET /customer", Auth(http.HandlerFunc(customerController.GetAll)))
 
 	return r
 }

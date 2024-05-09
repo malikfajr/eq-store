@@ -16,6 +16,18 @@ type Product struct {
 	CreatedAt   *time.Time `json:"createdAt" db:"created_at"`
 }
 
+type ProductSKU struct {
+	Id        string     `json:"id"`
+	Name      string     `json:"name"`
+	SKU       string     `json:"sku"`
+	Category  string     `json:"category"`
+	ImageUrl  string     `json:"imageUrl" db:"image_url"`
+	Price     int        `json:"price"`
+	Stock     int        `json:"stock"`
+	Location  string     `json:"location"`
+	CreatedAt *time.Time `json:"createdAt" db:"created_at"`
+}
+
 type ProductInsertUpdateRequest struct {
 	Name        string `json:"name" validate:"required,min=1,max=30"`
 	SKU         string `json:"sku" validate:"required,min=1,max=30"`

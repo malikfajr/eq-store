@@ -38,6 +38,8 @@ func (s *staffController) Register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// TODO: Validate country code
+
 	data, err := s.service.Register(r.Context(), body)
 	if err != nil {
 		e := exception.NewConflict("phone number is exists")
