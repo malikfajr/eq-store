@@ -2,12 +2,14 @@ package controller
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 
 	"github.com/go-playground/validator/v10"
 	"github.com/malikfajr/eq-store/entity"
 	"github.com/malikfajr/eq-store/exception"
 	"github.com/malikfajr/eq-store/service"
+	"github.com/nyaruka/phonenumbers"
 )
 
 type staffController struct {
@@ -39,6 +41,11 @@ func (s *staffController) Register(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// TODO: Validate country code
+	// if s.isValidPhoneNumber(body.PhoneNumber) == false {
+	// 	e := exception.NewBadRequest("request doesn’t pass validation")
+	// 	e.Send(w)
+	// 	return
+	// }
 
 	data, err := s.service.Register(r.Context(), body)
 	if err != nil {
@@ -76,8 +83,9 @@ func (s *staffController) Login(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		if e, ok := err.(*exception.CustomError); ok {
 			e.Send(w)
+			return
 		}
-		return
+		panic(err)
 	}
 
 	success := &successResponse{
@@ -87,4 +95,15 @@ func (s *staffController) Login(w http.ResponseWriter, r *http.Request) {
 
 	success.Send(w, http.StatusOK)
 	return
+}
+
+func (s *staffController) isValidPhoneNumber(phone string) bool {
+	num, err := phonenumbers.Parse(phone, "")
+	if err != nil {
+		fmt.Println("Error parsing phone number:", err)
+		return false
+	}
+
+	// Memeriksa apakah nomor telepon valid
+	return phonenumbers.IsPossibleNumber(num)
 }

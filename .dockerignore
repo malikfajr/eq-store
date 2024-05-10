@@ -1,0 +1,5 @@
+db/*
+.git
+./data
+docker-compose.yaml
+postgres

@@ -44,8 +44,7 @@ func (p *productService) Create(ctx context.Context, req *entity.ProductInsertRe
 
 	data, err := p.productRepository.Insert(ctx, p.pool, product)
 	if err != nil {
-		e := exception.NewInternalServer("Internal server error")
-		return nil, e
+		panic(exception.NewInternalServer(err.Error()))
 	}
 
 	return data, nil
@@ -102,7 +101,7 @@ func (p *productService) Update(ctx context.Context, ID string, req *entity.Prod
 	err = p.productRepository.UpdateTx(ctx, tx, product)
 
 	if err != nil {
-		return nil, exception.NewInternalServer("Internal server error")
+		panic(exception.NewInternalServer(err.Error()))
 	}
 
 	return product, nil

@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -14,12 +15,21 @@ import (
 
 func main() {
 
-	pool, err := pgxpool.New(context.Background(), "postgres://postgres:secret@localhost:5432/eq?sslmode=disable")
+	connStr := fmt.Sprintf("postgres://%s:%s@%s:%s/%s?%s", os.Getenv("DB_USER"), os.Getenv("DB_PASSWORD"), os.Getenv("DB_HOST"), os.Getenv("DB_PORT"), os.Getenv("DB_NAME"), os.Getenv("DB_PARAMS"))
+
+	pool, err := pgxpool.New(context.Background(), connStr)
 	if err != nil {
 		log.Fatalln("Cannot connect database: ", err)
 		os.Exit(1)
 	}
-	log.Println("Database connected")
+
+	if err := pool.Ping(context.Background()); err == nil {
+		log.Println("Database connected")
+	} else {
+		log.Fatalln("Cannot connect database: ", err)
+		os.Exit(1)
+	}
+
 	defer pool.Close()
 
 	validate := validator.New()
