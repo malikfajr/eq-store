@@ -10,6 +10,7 @@ import (
 	"github.com/go-playground/validator/v10"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/malikfajr/eq-store/middleware"
+	"github.com/malikfajr/eq-store/pkg"
 	"github.com/malikfajr/eq-store/routes"
 )
 
@@ -33,6 +34,8 @@ func main() {
 	defer pool.Close()
 
 	validate := validator.New()
+	validate.RegisterValidation("valid_phone", pkg.IsValidPhoneNumber)
+	validate.RegisterValidation("IsURL", pkg.ValidateURL)
 
 	r := http.NewServeMux()
 

@@ -3,7 +3,7 @@ CREATE TABLE IF NOT EXISTS transactions(
     customer_id UUID NOT NULL,
     paid int NOT NULL,
     change int NOT NULL,
-    craeted_at TIMESTAMP DEFAULT NOW(),
+    created_at TIMESTAMP DEFAULT NOW(),
 
     FOREIGN KEY (customer_id) REFERENCES customers(id)
     ON UPDATE CASCADE ON DELETE CASCADE

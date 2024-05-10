@@ -1,5 +1,7 @@
 package entity
 
+import "time"
+
 type ProductDetail struct {
 	TransactionId string `json:"-"`
 	ProductId     string `json:"productId" validate:"required"`
@@ -14,6 +16,7 @@ type Transaction struct {
 	Paid           int             `json:"paid"`
 	Change         int             `json:"change"`
 	ProductDetails []ProductDetail `json:"productDetails"`
+	CreatedAt      *time.Time      `json:"createdAt" db:"created_at"`
 }
 
 type TransactionInsertRequest struct {

@@ -57,11 +57,11 @@ func (t *transactionRepository) DecrementStock(ctx context.Context, tx pgx.Tx, p
 
 func (t *transactionRepository) FindMany(ctx context.Context, pool *pgxpool.Pool, params *entity.TransactionQueryParams) []entity.Transaction {
 	query := `
-		SELECT t.id, t.customer_id, t.paid, t.change, 
+		SELECT t.id, t.customer_id, t.paid, t.change, t.created_at, 
 			(SELECT JSON_AGG(json_build_object('productId', td.product_id, 'quantity', td.quantity)) 
 				FROM transaction_detail td 
 				WHERE td.transaction_id = t.id) AS pd_details 
-		FROM transactions AS t WHERE 1=1;`
+		FROM transactions AS t WHERE 1=1`
 
 	args := pgx.NamedArgs{}
 
@@ -72,6 +72,8 @@ func (t *transactionRepository) FindMany(ctx context.Context, pool *pgxpool.Pool
 
 	if params.CreatedAt != "" {
 		query += " ORDER BY t.created_at " + params.CreatedAt
+	} else {
+		query += " ORDER BY t.created_at desc"
 	}
 
 	query += " LIMIT @limit OFFSET @offset"
@@ -86,7 +88,7 @@ func (t *transactionRepository) FindMany(ctx context.Context, pool *pgxpool.Pool
 	var transactions []entity.Transaction = []entity.Transaction{}
 	for rows.Next() {
 		transaction := &entity.Transaction{}
-		rows.Scan(&transaction.Id, &transaction.CustomerId, &transaction.Paid, &transaction.Change, &transaction.ProductDetails)
+		rows.Scan(&transaction.Id, &transaction.CustomerId, &transaction.Paid, &transaction.Change, &transaction.CreatedAt, &transaction.ProductDetails)
 		transactions = append(transactions, *transaction)
 	}
 

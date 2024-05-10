@@ -11,6 +11,7 @@ import (
 
 type ProductService interface {
 	Create(ctx context.Context, req *entity.ProductInsertRequest) (*entity.Product, error)
+	IsExists(ctx context.Context, productId string) bool
 	GetAll(ctx context.Context, req *entity.ProductQueryParams) (*[]entity.Product, error)
 	FindSku(ctx context.Context, req *entity.ProductQueryParams) (*[]entity.ProductSKU, error)
 	Update(ctx context.Context, ID string, req *entity.ProductUpdateRequest) (*entity.Product, error)
@@ -48,6 +49,12 @@ func (p *productService) Create(ctx context.Context, req *entity.ProductInsertRe
 	}
 
 	return data, nil
+}
+
+func (p *productService) IsExists(ctx context.Context, productId string) bool {
+	exists := p.productRepository.IsExists(ctx, p.pool, productId)
+
+	return exists
 }
 
 func (p *productService) GetAll(ctx context.Context, req *entity.ProductQueryParams) (*[]entity.Product, error) {

@@ -61,7 +61,7 @@ func (t *transactionController) Create(w http.ResponseWriter, r *http.Request) {
 		Data:    make([]string, 0),
 	}
 
-	success.Send(w, http.StatusCreated)
+	success.Send(w, http.StatusOK)
 }
 
 // GetAll implements TransactionController.
@@ -72,18 +72,21 @@ func (t *transactionController) GetAll(w http.ResponseWriter, r *http.Request) {
 		params.CustomerId = customerId
 	}
 
-	if limit := r.URL.Query().Get("limit"); limit != "" {
-		n, err := strconv.Atoi(limit)
-		if err != nil {
+	if n, err := strconv.Atoi(r.URL.Query().Get("limit")); err != nil {
+		params.Limit = 5
+	} else {
+		if n < 0 {
 			params.Limit = 5
 		} else {
 			params.Limit = n
+
 		}
 	}
 
-	if offset := r.URL.Query().Get("offset"); offset != "" {
-		n, err := strconv.Atoi(offset)
-		if err != nil {
+	if n, err := strconv.Atoi(r.URL.Query().Get("offset")); err != nil {
+		params.Offset = 0
+	} else {
+		if n < 0 {
 			params.Offset = 0
 		} else {
 			params.Offset = n

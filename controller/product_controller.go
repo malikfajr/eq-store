@@ -81,18 +81,21 @@ func (p *productController) GetAll(w http.ResponseWriter, r *http.Request) {
 		queryParams.ID = id
 	}
 
-	if limit := r.URL.Query().Get("limit"); limit != "" {
-		n, err := strconv.Atoi(limit)
-		if err != nil {
+	if n, err := strconv.Atoi(r.URL.Query().Get("limit")); err != nil {
+		queryParams.Limit = 5
+	} else {
+		if n < 0 {
 			queryParams.Limit = 5
 		} else {
 			queryParams.Limit = n
+
 		}
 	}
 
-	if offset := r.URL.Query().Get("offset"); offset != "" {
-		n, err := strconv.Atoi(offset)
-		if err != nil {
+	if n, err := strconv.Atoi(r.URL.Query().Get("offset")); err != nil {
+		queryParams.Offset = 0
+	} else {
+		if n < 0 {
 			queryParams.Offset = 0
 		} else {
 			queryParams.Offset = n
@@ -165,6 +168,14 @@ func (p *productController) GetAll(w http.ResponseWriter, r *http.Request) {
 
 func (p *productController) Update(w http.ResponseWriter, r *http.Request) {
 	ID := r.PathValue("id")
+
+	exists := p.service.IsExists(r.Context(), ID)
+	if exists == false {
+		e := exception.NewNotFound("product Id not found")
+		e.Send(w)
+		return
+	}
+
 	body := entity.ProductUpdateRequest{}
 
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
@@ -227,18 +238,21 @@ func (p *productController) FindSku(w http.ResponseWriter, r *http.Request) {
 		queryParams.ID = id
 	}
 
-	if limit := r.URL.Query().Get("limit"); limit != "" {
-		n, err := strconv.Atoi(limit)
-		if err != nil {
+	if n, err := strconv.Atoi(r.URL.Query().Get("limit")); err != nil {
+		queryParams.Limit = 5
+	} else {
+		if n < 0 {
 			queryParams.Limit = 5
 		} else {
 			queryParams.Limit = n
+
 		}
 	}
 
-	if offset := r.URL.Query().Get("offset"); offset != "" {
-		n, err := strconv.Atoi(offset)
-		if err != nil {
+	if n, err := strconv.Atoi(r.URL.Query().Get("offset")); err != nil {
+		queryParams.Offset = 0
+	} else {
+		if n < 0 {
 			queryParams.Offset = 0
 		} else {
 			queryParams.Offset = n

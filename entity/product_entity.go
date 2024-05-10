@@ -32,7 +32,7 @@ type ProductInsertRequest struct {
 	Name        string `json:"name" validate:"required,min=1,max=30"`
 	SKU         string `json:"sku" validate:"required,min=1,max=30"`
 	Category    string `json:"category" validate:"required,oneof=Clothing Accessories Footwear Beverages"`
-	ImageUrl    string `json:"imageUrl" validate:"required,url"`
+	ImageUrl    string `json:"imageUrl" validate:"required,IsURL"`
 	Notes       string `json:"notes" validate:"required,min=1,max=200"`
 	Price       int    `json:"price" validate:"required,min=1"`
 	Stock       *int   `json:"stock" validate:"required,min=0,max=100000"`
@@ -44,7 +44,7 @@ type ProductUpdateRequest struct {
 	Name        string `json:"name" validate:"required,min=1,max=30"`
 	SKU         string `json:"sku" validate:"required,min=1,max=30"`
 	Category    string `json:"category" validate:"required,oneof=Clothing Accessories Footwear Beverages"`
-	ImageUrl    string `json:"imageUrl" validate:"required,url"`
+	ImageUrl    string `json:"imageUrl" validate:"required,IsURL"`
 	Notes       string `json:"notes" validate:"required,min=1,max=200"`
 	Price       int    `json:"price" validate:"required,min=1"`
 	Stock       *int   `json:"stock" validate:"required,min=1,max=100000"`

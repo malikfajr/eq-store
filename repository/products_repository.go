@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"errors"
+	"log"
 	"strings"
 
 	"github.com/jackc/pgx/v5"
@@ -13,6 +14,7 @@ import (
 
 type ProductRepository interface {
 	Insert(ctx context.Context, pool *pgxpool.Pool, product *entity.Product) (*entity.Product, error)
+	IsExists(ctx context.Context, pool *pgxpool.Pool, productId string) bool
 	FindMany(ctx context.Context, pool *pgxpool.Pool, params *entity.ProductQueryParams) (*[]entity.Product, error)
 	FindSku(ctx context.Context, pool *pgxpool.Pool, params *entity.ProductQueryParams) (*[]entity.ProductSKU, error)
 	FindOne(ctx context.Context, pool *pgxpool.Pool, ID string) (*entity.Product, error)
@@ -93,6 +95,8 @@ func (p *productRepository) FindMany(ctx context.Context, pool *pgxpool.Pool, pa
 		query += " ORDER BY price " + params.Price
 	} else if params.CreatedAt != "" {
 		query += " ORDER BY created_at " + params.CreatedAt
+	} else {
+		query += " ORDER BY  created_at desc"
 	}
 
 	args["limit"] = params.Limit
@@ -108,6 +112,19 @@ func (p *productRepository) FindMany(ctx context.Context, pool *pgxpool.Pool, pa
 	products, err := pgx.CollectRows(rows, pgx.RowToStructByPos[entity.Product])
 
 	return &products, err
+}
+
+func (p *productRepository) IsExists(ctx context.Context, pool *pgxpool.Pool, productId string) bool {
+	var id int
+	query := "SELECT 1 FROM products WHERE id = $1"
+
+	err := pool.QueryRow(ctx, query, productId).Scan(&id)
+	if err != nil {
+		return false
+	}
+
+	log.Println(id, "is found")
+	return true
 }
 
 func (p *productRepository) FindOne(ctx context.Context, pool *pgxpool.Pool, ID string) (*entity.Product, error) {
@@ -161,6 +178,8 @@ func (p *productRepository) FindSku(ctx context.Context, pool *pgxpool.Pool, par
 
 	if params.Price != "" {
 		query += " ORDER BY price " + params.Price
+	} else {
+		query += " ORDER BY created_at desc"
 	}
 
 	args["limit"] = params.Limit

@@ -83,7 +83,7 @@ func (t *transactionService) isValidPayload(ctx context.Context, payload *entity
 
 	products := t.productRepository.FindByIds(ctx, t.pool, productIds)
 	if len(*products) != len(productDetails) {
-		return exception.NewBadRequest("one of productId not fund")
+		return exception.NewNotFound("one of productId not found")
 	}
 
 	// 2. paid is enought - 400
