@@ -3,3 +3,5 @@ db/*
 ./data
 docker-compose.yaml
 postgres
+*.pem
+*.key

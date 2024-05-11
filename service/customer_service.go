@@ -12,6 +12,7 @@ import (
 type CustomerService interface {
 	Create(ctx context.Context, customer *entity.CustomerInsertUpdateRequest) (*entity.Customer, error)
 	FindMany(ctx context.Context, params *entity.CustomerQueryParams) *[]entity.Customer
+	IsExist(ctx context.Context, phoneNumber string) bool
 }
 
 type customerService struct {
@@ -45,4 +46,8 @@ func (c *customerService) FindMany(ctx context.Context, params *entity.CustomerQ
 	customers := c.customerRepository.FindMany(ctx, c.pool, params)
 
 	return customers
+}
+
+func (c *customerService) IsExist(ctx context.Context, phoneNumber string) bool {
+	return c.customerRepository.IsExist(ctx, c.pool, phoneNumber)
 }

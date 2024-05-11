@@ -2,7 +2,6 @@ package repository
 
 import (
 	"context"
-	"log"
 	"strings"
 
 	"github.com/jackc/pgx/v5"
@@ -65,8 +64,6 @@ func (c *customerRepository) IsExist(ctx context.Context, pool *pgxpool.Pool, cu
 	if err != nil {
 		return false
 	}
-
-	log.Println(n, "exists")
 
 	return true
 }

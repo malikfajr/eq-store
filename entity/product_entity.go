@@ -47,7 +47,7 @@ type ProductUpdateRequest struct {
 	ImageUrl    string `json:"imageUrl" validate:"required,IsURL"`
 	Notes       string `json:"notes" validate:"required,min=1,max=200"`
 	Price       int    `json:"price" validate:"required,min=1"`
-	Stock       *int   `json:"stock" validate:"required,min=1,max=100000"`
+	Stock       *int   `json:"stock" validate:"required,min=0,max=100000"`
 	Location    string `json:"location" validate:"required,min=1,max=200"`
 	IsAvailable *bool  `json:"isAvailable" validate:"required"`
 }

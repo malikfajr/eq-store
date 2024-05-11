@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"errors"
+	"log"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/malikfajr/eq-store/entity"
@@ -11,6 +12,7 @@ import (
 type StaffRepository interface {
 	Register(ctx context.Context, pool *pgxpool.Pool, staff *entity.StaffRegisterRequest) (string, error)
 	Login(ctx context.Context, pool *pgxpool.Pool, phoneNumber string) (*entity.Staff, error)
+	PhoneIsExist(ctx context.Context, pool *pgxpool.Pool, phoneNumber string) bool
 }
 
 type staffRepositoryImp struct {
@@ -51,8 +53,24 @@ func (i *staffRepositoryImp) Register(ctx context.Context, pool *pgxpool.Pool, s
 	row := pool.QueryRow(ctx, query, staff.PhoneNumber, staff.Name, staff.Password)
 	err := row.Scan(&id)
 	if err != nil {
-		return id, err
+		panic(err)
 	}
 
 	return id, nil
+}
+
+func (i *staffRepositoryImp) PhoneIsExist(ctx context.Context, pool *pgxpool.Pool, phoneNumber string) bool {
+	var n int
+	query := "SELECT 1 FROM staffs WHERE phone_number = $1 LIMIT 1"
+
+	row := pool.QueryRow(ctx, query, phoneNumber)
+	err := row.Scan(&n)
+	if err != nil {
+		log.Print(err)
+		return false
+	}
+
+	log.Println(phoneNumber, "exists")
+
+	return true
 }

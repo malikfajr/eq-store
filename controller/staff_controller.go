@@ -2,7 +2,7 @@ package controller
 
 import (
 	"encoding/json"
-	"fmt"
+	"log"
 	"net/http"
 
 	"github.com/go-playground/validator/v10"
@@ -34,18 +34,17 @@ func (s *staffController) Register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if s.service.PhoneIsExist(r.Context(), body.PhoneNumber) == true {
+		e := exception.NewConflict("phone is registered")
+		e.Send(w)
+		return
+	}
+
 	if err := s.validate.Struct(body); err != nil {
 		e := exception.NewBadRequest("request doesn’t pass validation")
 		e.Send(w)
 		return
 	}
-
-	// TODO: Validate country code
-	// if s.isValidPhoneNumber(body.PhoneNumber) == false {
-	// 	e := exception.NewBadRequest("request doesn’t pass validation")
-	// 	e.Send(w)
-	// 	return
-	// }
 
 	data, err := s.service.Register(r.Context(), body)
 	if err != nil {
@@ -100,7 +99,7 @@ func (s *staffController) Login(w http.ResponseWriter, r *http.Request) {
 func (s *staffController) isValidPhoneNumber(phone string) bool {
 	num, err := phonenumbers.Parse(phone, "")
 	if err != nil {
-		fmt.Println("Error parsing phone number:", err)
+		log.Println("Error parsing phone number:", err)
 		return false
 	}
 

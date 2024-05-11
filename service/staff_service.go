@@ -13,6 +13,7 @@ import (
 type StaffService interface {
 	Login(ctx context.Context, req *entity.StaffLoginRequest) (*StaffResponse, error)
 	Register(ctx context.Context, req *entity.StaffRegisterRequest) (*StaffResponse, error)
+	PhoneIsExist(ctx context.Context, phoneNumber string) bool
 }
 
 type staffService struct {
@@ -77,4 +78,8 @@ func (s *staffService) Register(ctx context.Context, req *entity.StaffRegisterRe
 	}
 
 	return data, nil
+}
+
+func (s *staffService) PhoneIsExist(ctx context.Context, phoneNumber string) bool {
+	return s.staffRepository.PhoneIsExist(ctx, s.pool, phoneNumber)
 }
