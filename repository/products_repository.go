@@ -53,7 +53,7 @@ func (p *productRepository) Insert(ctx context.Context, pool *pgxpool.Pool, prod
 }
 
 func (p *productRepository) FindMany(ctx context.Context, pool *pgxpool.Pool, params *entity.ProductQueryParams) (*[]entity.Product, error) {
-	query := "SELECT * FROM products WHERE 1=1"
+	query := "SELECT id, name, sku, category, image_url, notes, price, stock, location, is_available, created_at FROM products WHERE deleted_at IS NULL"
 	args := pgx.NamedArgs{}
 
 	if params.ID != "" {
@@ -116,7 +116,7 @@ func (p *productRepository) FindMany(ctx context.Context, pool *pgxpool.Pool, pa
 
 func (p *productRepository) IsExists(ctx context.Context, pool *pgxpool.Pool, productId string) bool {
 	var id int
-	query := "SELECT 1 FROM products WHERE id = $1"
+	query := "SELECT 1 FROM products WHERE deleted_at IS NULL AND id = $1 "
 
 	err := pool.QueryRow(ctx, query, productId).Scan(&id)
 	if err != nil {
@@ -129,7 +129,7 @@ func (p *productRepository) IsExists(ctx context.Context, pool *pgxpool.Pool, pr
 
 func (p *productRepository) FindOne(ctx context.Context, pool *pgxpool.Pool, ID string) (*entity.Product, error) {
 	var product entity.Product
-	query := "SELECT * FROM products WHERE id = $1 LIMIT 1;"
+	query := "SELECT id, name, sku, category, image_url, notes, price, stock, location, is_available, created_at FROM products WHERE deleted_at IS NULL AND id = $1 LIMIT 1;"
 
 	rows, err := pool.Query(ctx, query, ID)
 	if err != nil {
@@ -145,7 +145,7 @@ func (p *productRepository) FindOne(ctx context.Context, pool *pgxpool.Pool, ID 
 }
 
 func (p *productRepository) FindSku(ctx context.Context, pool *pgxpool.Pool, params *entity.ProductQueryParams) (*[]entity.ProductSKU, error) {
-	query := "SELECT id, name, sku, category, image_url, price, stock, location, created_at FROM products WHERE 1=1 AND is_available = true"
+	query := "SELECT id, name, sku, category, image_url, price, stock, location, created_at FROM products WHERE deleted_at IS NULL AND is_available = true"
 	args := pgx.NamedArgs{}
 
 	if params.ID != "" {
@@ -224,7 +224,7 @@ func (p *productRepository) UpdateTx(ctx context.Context, tx pgx.Tx, product *en
 }
 
 func (p *productRepository) DeleteTx(ctx context.Context, tx pgx.Tx, ID string) error {
-	query := "DELETE FROM products WHERE ID = $1"
+	query := "UPDATE products SET deleted_at = NOW() WHERE ID = $1"
 
 	tag, err := tx.Exec(ctx, query, ID)
 
@@ -236,7 +236,7 @@ func (p *productRepository) DeleteTx(ctx context.Context, tx pgx.Tx, ID string) 
 }
 
 func (p *productRepository) FindByIds(ctx context.Context, pool *pgxpool.Pool, productIds []string) *[]entity.Product {
-	query := "SELECT * FROM products WHERE id::TEXT = ANY($1);"
+	query := "SELECT id, name, sku, category, image_url, notes, price, stock, location, is_available, created_at FROM products WHERE deleted_at IS NULL AND id::TEXT = ANY($1);"
 
 	rows, err := pool.Query(ctx, query, productIds)
 	if err != nil {

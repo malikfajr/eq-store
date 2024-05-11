@@ -21,7 +21,7 @@ type Transaction struct {
 
 type TransactionInsertRequest struct {
 	CustomerId     string          `json:"customerId" validate:"required"`
-	ProductDetails []ProductDetail `json:"productDetails" validate:"required,gte=1,dive,required"`
+	ProductDetails []ProductDetail `json:"productDetails" validate:"required,gte=1,dive,required"` // TODO: validate if product id duplicate fi
 	Paid           int             `json:"paid" validate:"required,min=1"`
 	Change         *int            `json:"change" validate:"required,min=0"`
 }

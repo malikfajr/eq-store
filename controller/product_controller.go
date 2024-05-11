@@ -169,12 +169,12 @@ func (p *productController) GetAll(w http.ResponseWriter, r *http.Request) {
 func (p *productController) Update(w http.ResponseWriter, r *http.Request) {
 	ID := r.PathValue("id")
 
-	exists := p.service.IsExists(r.Context(), ID)
-	if exists == false {
-		e := exception.NewNotFound("product Id not found")
-		e.Send(w)
-		return
-	}
+	// exists := p.service.IsExists(r.Context(), ID)
+	// if exists == false {
+	// 	e := exception.NewNotFound("product Id not found")
+	// 	e.Send(w)
+	// 	return
+	// }
 
 	body := entity.ProductUpdateRequest{}
 
