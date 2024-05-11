@@ -34,14 +34,14 @@ func (t *transactionRepository) Create(ctx context.Context, tx pgx.Tx, payload *
 }
 
 func (t *transactionRepository) InsertDetail(ctx context.Context, tx pgx.Tx, transactionId string, payload []entity.ProductDetail) {
-	query := "INSERT INTO transaction_detail (transaction_id, product_id, quantity) VALUES ($1, $2, $3)"
-
-	for _, pd := range payload {
-		_, err := tx.Exec(ctx, query, transactionId, pd.ProductId, pd.Quantity)
-		if err != nil {
-			panic(err)
-		}
-	}
+	tx.CopyFrom(
+		ctx,
+		pgx.Identifier{"transaction_detail"},
+		[]string{"transaction_id", "product_id", "quantity"},
+		pgx.CopyFromSlice(len(payload), func(i int) ([]interface{}, error) {
+			return []interface{}{transactionId, payload[i].ProductId, payload[i].Quantity}, nil
+		}),
+	)
 }
 
 func (t *transactionRepository) DecrementStock(ctx context.Context, tx pgx.Tx, payload []entity.ProductDetail) {
