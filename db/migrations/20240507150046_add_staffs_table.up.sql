@@ -6,4 +6,4 @@ CREATE TABLE IF NOT EXISTS staffs (
     created_at TIMESTAMP DEFAULT NOW()
 );
 
-CREATE INDEX IF NOT EXISTS idx_staff_phone_number ON staffs(phone_number);
+CREATE INDEX IF NOT EXISTS idx_staff_phone_number ON staffs USING HASH(phone_number);

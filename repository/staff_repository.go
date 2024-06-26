@@ -24,24 +24,15 @@ func NewStaffRepository() StaffRepository {
 
 // Login implements staffRepository.
 func (i *staffRepositoryImp) Login(ctx context.Context, pool *pgxpool.Pool, phoneNumber string) (*entity.Staff, error) {
-	query := "SELECT id, phone_number, name, password FROM staffs WHERE phone_number = $1"
+	query := "SELECT id, phone_number, name, password FROM staffs WHERE phone_number = $1 LIMIT 1"
+	staff := &entity.Staff{}
 
-	rows, err := pool.Query(ctx, query, phoneNumber)
+	err := pool.QueryRow(ctx, query, phoneNumber).Scan(&staff.Id, &staff.PhoneNumber, &staff.Name, &staff.Password)
 	if err != nil {
-		return nil, err
-	}
-
-	defer rows.Close()
-
-	if rows.Next() == false {
 		return nil, errors.New("Phone number not found")
 	}
 
-	staff := entity.Staff{}
-
-	rows.Scan(&staff.Id, &staff.PhoneNumber, &staff.Name, &staff.Password)
-
-	return &staff, nil
+	return staff, nil
 }
 
 //

@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/malikfajr/eq-store/entity"
 	"github.com/malikfajr/eq-store/exception"
@@ -86,7 +87,9 @@ func (p *productService) Update(ctx context.Context, ID string, req *entity.Prod
 	product.Location = req.Location
 	product.IsAvailable = *req.IsAvailable
 
-	tx, err := p.pool.Begin(ctx)
+	tx, err := p.pool.BeginTx(ctx, pgx.TxOptions{
+		IsoLevel: pgx.ReadUncommitted,
+	})
 	if err != nil {
 		panic(err)
 	}
@@ -115,24 +118,7 @@ func (p *productService) Update(ctx context.Context, ID string, req *entity.Prod
 }
 
 func (p *productService) Delete(ctx context.Context, ID string) error {
-	tx, err := p.pool.Begin(ctx)
-	if err != nil {
-		panic(err)
-	}
-
-	err = p.productRepository.DeleteTx(ctx, tx, ID)
-
-	if err != nil {
-		e := tx.Rollback(ctx)
-		if e != nil {
-			panic(e)
-		}
-	} else {
-		e := tx.Commit(ctx)
-		if e != nil {
-			panic(e)
-		}
-	}
+	err := p.productRepository.Delete(ctx, p.pool, ID)
 
 	return err
 }

@@ -20,7 +20,7 @@ type ProductRepository interface {
 	FindOne(ctx context.Context, pool *pgxpool.Pool, ID string) (*entity.Product, error)
 	FindByIds(ctx context.Context, pool *pgxpool.Pool, productIds []string) *[]entity.Product
 	UpdateTx(ctx context.Context, tx pgx.Tx, product *entity.Product) error
-	DeleteTx(ctx context.Context, tx pgx.Tx, ID string) error
+	Delete(ctx context.Context, pool *pgxpool.Pool, ID string) error
 }
 
 type productRepository struct{}
@@ -223,10 +223,10 @@ func (p *productRepository) UpdateTx(ctx context.Context, tx pgx.Tx, product *en
 	return err
 }
 
-func (p *productRepository) DeleteTx(ctx context.Context, tx pgx.Tx, ID string) error {
+func (p *productRepository) Delete(ctx context.Context, pool *pgxpool.Pool, ID string) error {
 	query := "UPDATE products SET deleted_at = NOW() WHERE ID = $1"
 
-	tag, err := tx.Exec(ctx, query, ID)
+	tag, err := pool.Exec(ctx, query, ID)
 
 	if tag.RowsAffected() < 1 {
 		return exception.NewNotFound("product id not found")
