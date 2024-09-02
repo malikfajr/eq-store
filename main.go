@@ -6,6 +6,10 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"time"
+
+	"net/http/pprof"
+	_ "net/http/pprof"
 
 	"github.com/go-playground/validator/v10"
 	"github.com/malikfajr/eq-store/middleware"
@@ -19,6 +23,11 @@ func main() {
 
 	pool := pkg.CreateConnPool(context.Background(), connStr)
 
+	pool.Config().MaxConns = 10
+	pool.Config().MinConns = 5
+	pool.Config().MaxConnIdleTime = 30 * time.Minute
+	pool.Config().MaxConnLifetime = 2 * time.Hour
+
 	defer pool.Close()
 
 	validate := validator.New()
@@ -29,6 +38,8 @@ func main() {
 
 	RoutesV1 := routes.NewRoutesV1(pool, validate)
 	r.Handle("/v1/", http.StripPrefix("/v1", RoutesV1))
+
+	r.HandleFunc("/debug/pprof/profile", pprof.Profile)
 
 	s := http.Server{
 		Addr:    ":8080",

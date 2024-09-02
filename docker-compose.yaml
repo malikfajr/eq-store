@@ -1,3 +1,5 @@
+version: "2"
+
 services:
   backend:
     build: .
@@ -8,25 +10,105 @@ services:
       - DB_PASSWORD=secret
       - DB_NAME=eq
       - DB_PARAMS=sslmode=disable
-    depends_on:
-      - db
+      - BCRYPT_SALT=10
     ports:
       - 8080:8080
+    deploy:
+      resources:
+        limits:
+          cpus: 2
+          memory: 4g
+    networks:
+      - server
+    depends_on:
+      db:
+        condition: service_healthy
 
   db:
     image: postgres:16-alpine
     restart: always
-    command: postgres -c 'max_connections=10'
+    command: postgres -c 'max_connections=100'
     environment:
       POSTGRES_PASSWORD: secret
       POSTGRES_DB: eq
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - server
     ports:
       - 5432:5432
+    deploy:
+      resources:
+        limits:
+          cpus: 2
+          memory: 4g
+  
+  pg_exporter:
+    image: prometheuscommunity/postgres-exporter
+    environment: 
+      DATA_SOURCE_NAME: "postgresql://postgres:secret@db:5432/eq?sslmode=disable"
+    ports:
+      - "9187:9187"
+    networks:
+      - server
+    depends_on:
+      - db
+
+  cadvisor:
+    image: gcr.io/cadvisor/cadvisor:latest
+    ports:
+      - "9100:9100"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /sys:/sys
+      - /var/lib/docker/:/var/lib/docker
+    networks:
+      - server
+    depends_on:
+      - db
+
+  prometheus:
+    image: prom/prometheus
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+    ports:
+      - "9090:9090"
+    networks:
+      - server
+
+  grafana:
+    image: grafana/grafana
+    ports:
+      - "3000:3000"
+    networks:
+      - server
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: admin
+    volumes:
+      - grafana-data:/var/lib/grafana
+    depends_on:
+      - prometheus
+
     
-  migarte: 
+  migrate: 
     image: migrate/migrate
     volumes:
       - ./db/migrations:/migrations
     command: ["-path", "/migrations", "-database", "postgres://postgres:secret@db:5432/eq?sslmode=disable", "up"]
+    networks:
+      - server
     depends_on:
-      - db
+      db:
+        condition: service_healthy
+
+networks:
+  server: 
+    driver: bridge
+
+volumes:
+  postgres-data:
+  grafana-data:
